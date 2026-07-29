@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KageBR Server Cloner</title>
+    <style>
+        body { background-color: #313338; color: #f2f3f5; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background-color: #2b2d31; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-sizing: border-box; }
+        h1 { text-align: center; color: #5865F2; margin-bottom: 5px; font-size: 22px; }
+        p.subtitle { text-align: center; color: #949ba4; margin-top: 0; margin-bottom: 20px; font-size: 13px; }
+        label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: bold; color: #b5bac1; text-transform: uppercase; }
+        input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #1e1f22; background-color: #1e1f22; color: #ffffff; box-sizing: border-box; margin-bottom: 15px; font-size: 14px; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: #5865F2; color: white; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .badge { background-color: #23a55a; color: white; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>KageBR Cloner</h1>
+        <p class="subtitle">Clone servidores direto pelo celular</p>
+        {% if status %} <div class="badge">✅ {{ status }}</div> {% endif %}
+        <form action="/clonar" method="POST">
+            <label>Token da sua Conta</label>
+            <input type="password" name="token" required placeholder="Insira o Token">
+            <label>ID do Servidor de Origem</label>
+            <input type="text" name="origem" required placeholder="ID do servidor original">
+            <label>ID do Servidor de Destino</label>
+            <input type="text" name="destino" required placeholder="ID do servidor vazio">
+            <button type="submit">Iniciar Clonagem</button>
+        </form>
+    </div>
+</body>
+</html>
