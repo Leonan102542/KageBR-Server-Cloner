@@ -5,30 +5,139 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KageBR Server Cloner</title>
     <style>
-        body { background-color: #313338; color: #f2f3f5; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background-color: #2b2d31; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-sizing: border-box; }
-        h1 { text-align: center; color: #5865F2; margin-bottom: 5px; font-size: 22px; }
-        p.subtitle { text-align: center; color: #949ba4; margin-top: 0; margin-bottom: 20px; font-size: 13px; }
-        label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: bold; color: #b5bac1; text-transform: uppercase; }
-        input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #1e1f22; background-color: #1e1f22; color: #ffffff; box-sizing: border-box; margin-bottom: 15px; font-size: 14px; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: #5865F2; color: white; font-size: 15px; font-weight: bold; cursor: pointer; }
-        .badge { background-color: #23a55a; color: white; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px; font-size: 13px; }
+        :root {
+            --bg-main: #1e1f22;
+            --bg-card: #2b2d31;
+            --bg-input: #111214;
+            --blurple: #5865F2;
+            --text-main: #f2f3f5;
+            --text-muted: #949ba4;
+            --success: #23a55a;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            padding: 30px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 440px;
+            box-sizing: border-box;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 { text-align: center; color: var(--blurple); margin: 0 0 5px 0; font-size: 26px; font-weight: 800; }
+        p.subtitle { text-align: center; color: var(--text-muted); margin-top: 0; margin-bottom: 30px; font-size: 14px; }
+        label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        input { width: 100%; padding: 14px; border-radius: 8px; border: 1px solid transparent; background-color: var(--bg-input); color: #ffffff; box-sizing: border-box; font-size: 15px; margin-bottom: 20px; }
+        input:focus { border-color: var(--blurple); outline: none; }
+        
+        button { width: 100%; padding: 15px; border: none; border-radius: 8px; background-color: var(--blurple); color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
+        
+        /* Estilos da nova área de Estatísticas e Progresso */
+        .loader-container { display: none; text-align: center; margin-top: 10px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255, 255, 255, 0.1); border-top: 4px solid var(--blurple); border-radius: 50%; margin: 0 auto 20px auto; animation: spin 1s linear infinite; }
+        
+        .progress-bar-bg { width: 100%; background-color: var(--bg-input); height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 15px; }
+        .progress-bar-fill { width: 0%; background-color: var(--blurple); height: 100%; transition: width 0.3s ease; }
+        
+        .stat-text { color: var(--text-main); font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+        .status-msg { color: var(--text-muted); font-size: 13px; font-style: italic; }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+
     <div class="card">
         <h1>KageBR Cloner</h1>
-        <p class="subtitle">Clone servidores direto pelo celular</p>
-        {% if status %} <div class="badge">✅ {{ status }}</div> {% endif %}
-        <form action="/clonar" method="POST">
-            <label>Token da sua Conta</label>
-            <input type="password" name="token" required placeholder="Insira o Token">
+        <p class="subtitle">Acompanhe a cópia dos canais em tempo real</p>
+        
+        <form id="cloner-form" onsubmit="iniciarClonagem(event)">
+            <label>Token de Autenticação</label>
+            <input type="password" id="token" required placeholder="Insira seu Token do Discord">
+
             <label>ID do Servidor de Origem</label>
-            <input type="text" name="origem" required placeholder="ID do servidor original">
+            <input type="text" id="origem" required placeholder="ID do servidor original">
+
             <label>ID do Servidor de Destino</label>
-            <input type="text" name="destino" required placeholder="ID do servidor vazio">
-            <button type="submit">Iniciar Clonagem</button>
+            <input type="text" id="destino" required placeholder="ID do servidor vazio">
+
+            <button type="submit">Iniciar Clonagem Avançada</button>
         </form>
+
+        <!-- Painel de Estatísticas Dinâmicas -->
+        <div class="loader-container" id="loading-area">
+            <div class="spinner" id="main-spinner"></div>
+            <div class="stat-text" id="contador-texto">Canais Copiados: 0 / 0</div>
+            
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="barra-progresso"></div>
+            </div>
+            
+            <div class="status-msg" id="status-atual">Conectando...</div>
+        </div>
     </div>
+
+    <script>
+        async FindProgresso() {
+            const res = await fetch('/progresso');
+            const dados = await res.json();
+            
+            // Calcula a porcentagem real da barra
+            let porcentagem = 0;
+            if (dados.total > 0) {
+                porcentagem = Math.round((dados.criados / dados.total) * 100);
+            }
+            
+            // Atualiza a interface do celular sem recarregar a página
+            document.getElementById('contador-texto').textContent = `Canais Copiados: ${dados.criados} / ${dados.total}`;
+            document.getElementById('barra-progresso').style.width = `${porcentagem}%`;
+            document.getElementById('status-atual').textContent = dados.status;
+            
+            if (dados.finalizado) {
+                document.getElementById('main-spinner').style.display = 'none'; // Para o motor visual
+                document.getElementById('barra-progresso').style.backgroundColor = 'var(--success)';
+            } else {
+                // Continua perguntando ao servidor a cada 1 segundo se não acabou
+                setTimeout(FindProgresso, 1000);
+            }
+        }
+
+        async function iniciarClonagem(event) {
+            event.preventDefault();
+            
+            // Transforma o envio do formulário em formato URL Encoded para o FastAPI aceitar
+            const formData = new URLSearchParams();
+            formData.append('token', document.getElementById('token').value);
+            formData.append('origem', document.getElementById('origem').value);
+            formData.append('destino', document.getElementById('destino').value);
+
+            // Troca as telas
+            document.getElementById('cloner-form').style.display = 'none';
+            document.getElementById('loading-area').style.display = 'block';
+
+            // Envia para o backend começar o processo
+            await fetch('/clonar', {
+                method: 'POST',
+                body: formData
+            });
+
+            // Dispara o monitor de progresso em tempo real
+            FindProgresso();
+        }
+    </script>
 </body>
 </html>
