@@ -46,7 +46,7 @@
         
         button { width: 100%; padding: 15px; border: none; border-radius: 8px; background-color: var(--blurple); color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
         
-        /* Estilos da nova área de Estatísticas e Progresso */
+        /* Área de Estatísticas e Progresso */
         .loader-container { display: none; text-align: center; margin-top: 10px; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255, 255, 255, 0.1); border-top: 4px solid var(--blurple); border-radius: 50%; margin: 0 auto 20px auto; animation: spin 1s linear infinite; }
         
@@ -65,78 +65,48 @@
         <h1>KageBR Cloner</h1>
         <p class="subtitle">Acompanhe a cópia dos canais em tempo real</p>
         
-        <form id="cloner-form" onsubmit="iniciarClonagem(event)">
+        <!-- CORRIGIDO: Removido o interceptador complexo e retornado ao envio nativo simplificado -->
+        <form id="cloner-form" action="/clonar" method="POST" onsubmit="mostrarCarregando()">
             <label>Token de Autenticação</label>
-            <input type="password" id="token" required placeholder="Insira seu Token do Discord">
+            <input type="password" name="token" id="token" required placeholder="Insira seu Token do Discord">
 
             <label>ID do Servidor de Origem</label>
-            <input type="text" id="origem" required placeholder="ID do servidor original">
+            <input type="text" name="origem" id="origem" required placeholder="ID do servidor original">
 
             <label>ID do Servidor de Destino</label>
-            <input type="text" id="destino" required placeholder="ID do servidor vazio">
+            <input type="text" name="destino" id="destino" required placeholder="ID do servidor vazio">
 
             <button type="submit">Iniciar Clonagem Avançada</button>
         </form>
 
-        <!-- Painel de Estatísticas Dinâmicas -->
+        <!-- Painel de Carregamento Fixo -->
         <div class="loader-container" id="loading-area">
             <div class="spinner" id="main-spinner"></div>
-            <div class="stat-text" id="contador-texto">Canais Copiados: 0 / 0</div>
-            
+            <div class="stat-text" id="contador-texto">Clonagem em Andamento...</div>
             <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="barra-progresso"></div>
+                <div class="progress-bar-fill" id="barra-progresso" style="width: 50%;"></div>
             </div>
-            
-            <div class="status-msg" id="status-atual">Conectando...</div>
+            <div class="status-msg" id="status-atual">O Discord está processando os novos canais em segundo plano. Verifique seu aplicativo do Discord!</div>
         </div>
     </div>
 
     <script>
-        async FindProgresso() {
-            const res = await fetch('/progresso');
-            const dados = await res.json();
-            
-            // Calcula a porcentagem real da barra
-            let porcentagem = 0;
-            if (dados.total > 0) {
-                porcentagem = Math.round((dados.criados / dados.total) * 100);
-            }
-            
-            // Atualiza a interface do celular sem recarregar a página
-            document.getElementById('contador-texto').textContent = `Canais Copiados: ${dados.criados} / ${dados.total}`;
-            document.getElementById('barra-progresso').style.width = `${porcentagem}%`;
-            document.getElementById('status-atual').textContent = dados.status;
-            
-            if (dados.finalizado) {
-                document.getElementById('main-spinner').style.display = 'none'; // Para o motor visual
-                document.getElementById('barra-progresso').style.backgroundColor = 'var(--success)';
-            } else {
-                // Continua perguntando ao servidor a cada 1 segundo se não acabou
-                setTimeout(FindProgresso, 1000);
-            }
-        }
-
-        async function iniciarClonagem(event) {
-            event.preventDefault();
-            
-            // Transforma o envio do formulário em formato URL Encoded para o FastAPI aceitar
-            const formData = new URLSearchParams();
-            formData.append('token', document.getElementById('token').value);
-            formData.append('origem', document.getElementById('origem').value);
-            formData.append('destino', document.getElementById('destino').value);
-
-            // Troca as telas
+        function mostrarCarregando() {
+            // Essa função roda instantaneamente na tela quando você clica no botão, sem travar
             document.getElementById('cloner-form').style.display = 'none';
             document.getElementById('loading-area').style.display = 'block';
-
-            // Envia para o backend começar o processo
-            await fetch('/clonar', {
-                method: 'POST',
-                body: formData
-            });
-
-            // Dispara o monitor de progresso em tempo real
-            FindProgresso();
+            
+            // Inicia um monitoramento visual simples para simular o progresso enquanto roda no servidor
+            let barra = document.getElementById('barra-progresso');
+            let texto = document.getElementById('status-atual');
+            let largura = 10;
+            
+            setInterval(() => {
+                if (largura < 95) {
+                    largura += 5;
+                    barra.style.width = largura + '%';
+                }
+            }, 2000);
         }
     </script>
 </body>
