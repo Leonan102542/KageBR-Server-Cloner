@@ -3,110 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KageBR Server Cloner</title>
+    <title>KageBR Cloner Pro</title>
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://cloudflare.com"></script>
     <style>
-        :root {
-            --bg-main: #1e1f22;
-            --bg-card: #2b2d31;
-            --bg-input: #111214;
-            --blurple: #5865F2;
-            --text-main: #f2f3f5;
-            --text-muted: #949ba4;
-            --success: #23a55a;
-        }
-
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .card {
-            background-color: var(--bg-card);
-            padding: 30px;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 440px;
-            box-sizing: border-box;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-        }
-
-        h1 { text-align: center; color: var(--blurple); margin: 0 0 5px 0; font-size: 26px; font-weight: 800; }
-        p.subtitle { text-align: center; color: var(--text-muted); margin-top: 0; margin-bottom: 30px; font-size: 14px; }
-        label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-        input { width: 100%; padding: 14px; border-radius: 8px; border: 1px solid transparent; background-color: var(--bg-input); color: #ffffff; box-sizing: border-box; font-size: 15px; margin-bottom: 20px; }
-        input:focus { border-color: var(--blurple); outline: none; }
-        
-        button { width: 100%; padding: 15px; border: none; border-radius: 8px; background-color: var(--blurple); color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
-        
-        /* Área de Estatísticas e Progresso */
-        .loader-container { display: none; text-align: center; margin-top: 10px; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255, 255, 255, 0.1); border-top: 4px solid var(--blurple); border-radius: 50%; margin: 0 auto 20px auto; animation: spin 1s linear infinite; }
-        
-        .progress-bar-bg { width: 100%; background-color: var(--bg-input); height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 15px; }
-        .progress-bar-fill { width: 0%; background-color: var(--blurple); height: 100%; transition: width 0.3s ease; }
-        
-        .stat-text { color: var(--text-main); font-size: 16px; font-weight: bold; margin-bottom: 5px; }
-        .status-msg { color: var(--text-muted); font-size: 13px; font-style: italic; }
-
+        body { background-color: #111214; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .glass-card { background: rgba(43, 45, 49, 0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .neon-glow:focus { outline: none; border-color: #5865F2; box-shadow: 0 0 15px rgba(88, 101, 242, 0.4); }
+        .glow-btn { background: linear-gradient(135deg, #5865F2 0%, #8c52ff 100%); box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4); }
+        #canvas3d { position: absolute; top: 0; left: 0; width: 100%; height: 220px; z-index: 0; pointer-events: none; }
+        .loader-spinner { border: 4px solid rgba(88, 101, 242, 0.1); border-top: 4px solid #5865F2; border-right: 4px solid #8c52ff; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .terminal-box::-webkit-scrollbar { width: 4px; }
+        .terminal-box::-webkit-scrollbar-thumb { background: rgba(88, 101, 242, 0.4); border-radius: 10px; }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex items-center justify-center p-4 relative">
 
-    <div class="card">
-        <h1>KageBR Cloner</h1>
-        <p class="subtitle">Acompanhe a cópia dos canais em tempo real</p>
-        
-        <!-- CORRIGIDO: Removido o interceptador complexo e retornado ao envio nativo simplificado -->
-        <form id="cloner-form" action="/clonar" method="POST" onsubmit="mostrarCarregando()">
-            <label>Token de Autenticação</label>
-            <input type="password" name="token" id="token" required placeholder="Insira seu Token do Discord">
-
-            <label>ID do Servidor de Origem</label>
-            <input type="text" name="origem" id="origem" required placeholder="ID do servidor original">
-
-            <label>ID do Servidor de Destino</label>
-            <input type="text" name="destino" id="destino" required placeholder="ID do servidor vazio">
-
-            <button type="submit">Iniciar Clonagem Avançada</button>
-        </form>
-
-        <!-- Painel de Carregamento Fixo -->
-        <div class="loader-container" id="loading-area">
-            <div class="spinner" id="main-spinner"></div>
-            <div class="stat-text" id="contador-texto">Clonagem em Andamento...</div>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="barra-progresso" style="width: 50%;"></div>
+    <div class="w-full max-w-md glass-card rounded-2xl overflow-hidden relative z-10 shadow-2xl">
+        <div class="h-[220px] w-full relative bg-black/20">
+            <div id="canvas3d"></div>
+            <div class="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10 pointer-events-none">
+                <h1 class="text-2xl font-black text-white tracking-wider drop-shadow-lg">KAGEBR</h1>
+                <p class="text-xs text-[#5865F2] font-mono tracking-widest mt-1">SESSION PERSISTENCE READY</p>
             </div>
-            <div class="status-msg" id="status-atual">O Discord está processando os novos canais em segundo plano. Verifique seu aplicativo do Discord!</div>
+        </div>
+
+        <div class="p-6">
+            <form id="clonerForm" onsubmit="handleFormSubmit(event)" class="space-y-5 transition-all duration-500 ease-in-out">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 tracking-wider uppercase mb-2">Token de Autenticação</label>
+                    <input type="password" id="token" required placeholder="Insira o Token do Usuário ou Bot" 
+                           class="w-full bg-[#1e1f22] border border-white/5 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 transition-all duration-300 neon-glow">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 tracking-wider uppercase mb-2">ID Origem</label>
+                        <input type="text" id="origem_id" required placeholder="Origem ID" 
+                               class="w-full bg-[#1e1f22] border border-white/5 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 transition-all duration-300 neon-glow">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 tracking-wider uppercase mb-2">ID Destino</label>
+                        <input type="text" id="destino_id" required placeholder="Destino ID" 
+                               class="w-full bg-[#1e1f22] border border-white/5 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 transition-all duration-300 neon-glow">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full glow-btn text-white text-sm font-bold py-3.5 px-4 rounded-xl cursor-pointer mt-2 transition-transform active:scale-95">
+                    Clonar Servidor em Alta Performance
+                </button>
+            </form>
+
+            <div id="loaderArea" class="hidden opacity-0 flex flex-col transition-all duration-500 ease-in-out">
+                <div class="flex items-center gap-4 mb-4 bg-black/20 p-3 rounded-xl border border-white/5">
+                    <div class="loader-spinner"></div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white">Engine de Clonagem</h2>
+                        <p class="text-[11px] text-gray-400">Escutando barramento via WebSocket</p>
+                    </div>
+                </div>
+                
+                <div id="terminal" class="terminal-box w-full h-48 bg-black/50 border border-white/5 rounded-xl p-3 font-mono text-[11px] text-emerald-400 overflow-y-auto space-y-1">
+                    <div class="text-gray-500">>> Sincronizando canal de comunicação...</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        function mostrarCarregando() {
-            // Essa função roda instantaneamente na tela quando você clica no botão, sem travar
-            document.getElementById('cloner-form').style.display = 'none';
-            document.getElementById('loading-area').style.display = 'block';
+        // Recupera o histórico da sessão anterior do celular assim que carrega
+        window.onload = function() {
+            if(localStorage.getItem('kage_token')) document.getElementById('token').value = localStorage.getItem('kage_token');
+            if(localStorage.getItem('kage_origem')) document.getElementById('origem_id').value = localStorage.getItem('kage_origem');
+            if(localStorage.getItem('kage_destino')) document.getElementById('destino_id').value = localStorage.getItem('kage_destino');
+        };
+
+        const container = document.getElementById('canvas3d');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const pCount = 100;
+        const geom1 = new THREE.BufferGeometry(), geom2 = new THREE.BufferGeometry();
+        const pos1 = new Float32Array(pCount * 3), pos2 = new Float32Array(pCount * 3);
+        for(let i=0; i<pCount*3; i++) { pos1[i] = (Math.random()-0.5)*4; pos2[i] = (Math.random()-0.5)*4; }
+        geom1.setAttribute('position', new THREE.BufferAttribute(pos1, 3));
+        geom2.setAttribute('position', new THREE.BufferAttribute(pos2, 3));
+
+        const obj1 = new THREE.Points(geom1, new THREE.PointsMaterial({ color: 0x5865F2, size: 0.08 }));
+        const obj2 = new THREE.Points(geom2, new THREE.PointsMaterial({ color: 0x8c52ff, size: 0.08 }));
+        scene.add(obj1, obj2);
+        camera.position.z = 5;
+
+        let clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            let t = clock.getElapsedTime();
+            obj1.position.x = Math.cos(t * 0.7) * 1.3;
+            obj1.position.y = Math.sin(t * 0.4) * 0.3;
+            obj2.position.x = -Math.cos(t * 0.7) * 1.3;
+            obj2.position.y = -Math.sin(t * 0.4) * 0.3;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+        const terminal = document.getElementById('terminal');
+
+        ws.onmessage = function(event) {
+            const logLine = document.createElement('div');
+            logLine.textContent = `>> ${event.data}`;
+            if(event.data.includes('❌') || event.data.includes('🚨')) logLine.className = 'text-rose-400 font-bold';
+            else if(event.data.includes('⚠️')) logLine.className = 'text-amber-400';
+            else if(event.data.includes('✅') || event.data.includes('🎉')) logLine.className = 'text-emerald-400';
+            else logLine.className = 'text-gray-300';
             
-            // Inicia um monitoramento visual simples para simular o progresso enquanto roda no servidor
-            let barra = document.getElementById('barra-progresso');
-            let texto = document.getElementById('status-atual');
-            let largura = 10;
-            
-            setInterval(() => {
-                if (largura < 95) {
-                    largura += 5;
-                    barra.style.width = largura + '%';
-                }
-            }, 2000);
+            terminal.appendChild(logLine);
+            terminal.scrollTop = terminal.scrollHeight;
+        };
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const form = document.getElementById('clonerForm');
+            const loader = document.getElementById('loaderArea');
+
+            const tokVal = document.getElementById('token').value;
+            const oriVal = document.getElementById('origem_id').value;
+            const desVal = document.getElementById('destino_id').value;
+
+            // Salva dados localmente no celular
+            localStorage.setItem('kage_token', tokVal);
+            localStorage.setItem('kage_origem', oriVal);
+            localStorage.setItem('kage_destino', desVal);
+
+            const formData = new FormData();
+            formData.append('token', tokVal);
+            formData.append('origem_id', oriVal);
+            formData.append('destino_id', desVal);
+
+            form.style.opacity = '0';
+            setTimeout(() => {
+                form.classList.add('hidden');
+                loader.classList.remove('hidden');
+                setTimeout(() => loader.style.opacity = '1', 50);
+            }, 500);
+
+            fetch('/clonar', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    const line = document.createElement('div');
+                    line.textContent = ">> 📡 Handshake com o servidor estabelecido. Inicializando.";
+                    line.className = "text-[#5865F2]";
+                    terminal.appendChild(line);
+                });
         }
     </script>
 </body>
